@@ -3,7 +3,6 @@
 from models import db, Scientist, Mission, Planet
 from flask import Flask, make_response, jsonify, request
 from flask_migrate import Migrate
-from models import db, Scientist, Mission, Planet
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
