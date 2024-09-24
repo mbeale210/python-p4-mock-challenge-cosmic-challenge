@@ -20,50 +20,57 @@ class Planet(db.Model, SerializerMixin):
     __tablename__ = 'planets'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
+    name = db.Column(db.String)
     distance_from_earth = db.Column(db.Integer)
     nearest_star = db.Column(db.String)
 
+    # Add relationship
     missions = db.relationship('Mission', back_populates='planet', cascade='all, delete-orphan')
-    scientists = association_proxy('missions', 'scientist')
-
-    serialize_rules = ('-missions.planet', '-scientists')
+    
+    # Add serialization rules
+    serialize_rules = ('-missions.planet',)
 
 class Scientist(db.Model, SerializerMixin):
     __tablename__ = 'scientists'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    field_of_study = db.Column(db.String, nullable=False)
+    name = db.Column(db.String)
+    field_of_study = db.Column(db.String)
 
+    # Add relationship
     missions = db.relationship('Mission', back_populates='scientist', cascade='all, delete-orphan')
-    planets = association_proxy('missions', 'planet')
+    
+    # Add serialization rules
+    serialize_rules = ('-missions.scientist',)
 
-    serialize_rules = ('-missions.scientist', '-planets')
-
+    # Add validation
     @validates('name', 'field_of_study')
     def validate_scientist(self, key, value):
         if not value or not value.strip():
-            raise ValueError(f"Scientist must have a valid {key}.")
+            raise ValueError(f"Scientist must have a {key.replace('_', ' ')}.")
         return value
 
 class Mission(db.Model, SerializerMixin):
     __tablename__ = 'missions'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
+    name = db.Column(db.String)
+    
+    # Add relationships
     scientist_id = db.Column(db.Integer, db.ForeignKey('scientists.id'), nullable=False)
     planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'), nullable=False)
-
+    
     scientist = db.relationship('Scientist', back_populates='missions')
     planet = db.relationship('Planet', back_populates='missions')
+    
+    # Add serialization rules
+    serialize_rules = ('-scientist.missions', '-planet.missions',)
 
-    serialize_rules = ('-scientist.missions', '-planet.missions')
-
+    # Add validation
     @validates('name', 'scientist_id', 'planet_id')
     def validate_mission(self, key, value):
-        if key == 'name' and (not value or not value.strip()):
-            raise ValueError("Mission must have a valid name.")
-        elif key in ['scientist_id', 'planet_id'] and value is None:
-            raise ValueError(f"Mission must have a valid {key.replace('_id', '')}.")
+        if value is None:
+            raise ValueError(f"Mission must have a {key.replace('_', ' ')}.")
+        if key == 'name' and not value.strip():
+            raise ValueError("Mission must have a name.")
         return value
