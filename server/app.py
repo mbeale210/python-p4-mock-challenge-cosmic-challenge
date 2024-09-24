@@ -39,14 +39,14 @@ class Scientists(Resource):
 
 class ScientistById(Resource):
     def get(self, id):
-        scientist = Scientist.query.get(id)
+        scientist = db.session.get(Scientist, id)
         if scientist:
             return make_response(scientist.to_dict(rules=('-missions.scientist',)), 200)
         else:
             return make_response({"error": "Scientist not found"}, 404)
 
     def patch(self, id):
-        scientist = Scientist.query.get(id)
+        scientist = db.session.get(Scientist, id)
         if not scientist:
             return make_response({"error": "Scientist not found"}, 404)
 
@@ -60,7 +60,7 @@ class ScientistById(Resource):
             return make_response({"errors": ["validation errors"]}, 400)
 
     def delete(self, id):
-        scientist = Scientist.query.get(id)
+        scientist = db.session.get(Scientist, id)
         if not scientist:
             return make_response({"error": "Scientist not found"}, 404)
         
